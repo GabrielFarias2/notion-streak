@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Streak Diário</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 1rem;
+      max-width: 300px;
+    }
+    label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.2rem;
+    }
+    #streak {
+      margin-top: 1rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <label>
+    <input type="checkbox" id="chk"> Marcar hoje
+  </label>
+  <div id="streak">Streak: 0</div>
+
+  <script>
+    const chk = document.getElementById('chk');
+    const streakEl = document.getElementById('streak');
+
+    // formata uma Date como YYYY-MM-DD
+    function formatDate(d) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth()+1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    const today = formatDate(new Date());
+    const yesterday = formatDate(new Date(Date.now() - 864e5));
+
+    // Carrega do localStorage ou inicializa
+    let { lastDate, streak } = JSON.parse(localStorage.getItem('dailyStreak') || '["",0]')
+      .reduce((acc, cur, i) => {
+        if (i===0) acc.lastDate = cur;
+        else acc.streak = cur;
+        return acc;
+      }, { lastDate: "", streak: 0 });
+
+    // Se já marcou hoje, deixa o checkbox marcado
+    if (lastDate === today) {
+      chk.checked = true;
+    } else {
+      chk.checked = false;
+    }
+
+    // Se o último registro não foi ontem ou hoje, reinicia streak
+    if (lastDate !== yesterday && lastDate !== today) {
+      streak = 0;
+      lastDate = "";
+    }
+
+    // Atualiza display
+    function updateDisplay() {
+      streakEl.textContent = `Streak: ${streak}`;
+    }
+    updateDisplay();
+
+    chk.addEventListener('change', () => {
+      if (chk.checked) {
+        // só incrementa se ainda não marcou hoje
+        if (lastDate !== today) {
+          if (lastDate === yesterday) {
+            streak += 1;
+          } else {
+            streak = 1;
+          }
+          lastDate = today;
+        }
+      } else {
+        // opcional: ao desmarcar, você pode resetar ou deixar como está; aqui não faz nada
+      }
+      // salva
+      localStorage.setItem('dailyStreak', JSON.stringify([lastDate, streak]));
+      updateDisplay();
+    });
+  </script>
+</body>
+</html>
